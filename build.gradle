@@ -1,0 +1,52 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.2.4'
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven { url 'https://repo.spring.io/milestone' } // Spring AI는 아직 마일스톤 저장소에 있습니다
+}
+
+ext {
+	set('springAiVersion', "1.0.0-M1") // Spring AI 버전 설정
+}
+
+dependencies {
+	// 1. 웹 서버 기능
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	
+	// 2. Spring AI 핵심 (OpenAI 연동) ★
+	implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+
+	// 3. 롬복 (코딩 노가다 줄이기)
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// 4. 테스트 도구
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
