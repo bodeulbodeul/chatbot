@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>규정 AI 챗봇</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #b2c7d9; margin: 0; display: flex; justify-content: center; height: 100vh; }
+        .chat-container { width: 400px; background-color: #fff; display: flex; flex-direction: column; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { background-color: #a9bdce; padding: 15px; font-weight: bold; color: #3b3b3b; text-align: center; }
+        .chat-box { flex: 1; padding: 15px; overflow-y: auto; background-color: #b2c7d9; display: flex; flex-direction: column; gap: 10px; }
+
+        /* 말풍선 스타일 */
+        .message { max-width: 70%; padding: 10px; border-radius: 10px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+        .user-message { align-self: flex-end; background-color: #ffeb33; color: #000; }
+        .ai-message { align-self: flex-start; background-color: #fff; color: #000; border: 1px solid #eee; }
+
+        .input-area { padding: 10px; background-color: #fff; display: flex; border-top: 1px solid #eee; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
+        button { margin-left: 10px; padding: 10px 20px; background-color: #ffeb33; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #f0d700; }
+
+        /* 로딩 애니메이션 */
+        .loading { font-size: 12px; color: #666; align-self: flex-start; margin-left: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">🏢 사내 규정 봇</div>
+    <div class="chat-box" id="chatBox">
+        <div class="message ai-message">안녕하세요! 궁금한 규정을 물어보세요.</div>
+    </div>
+    <div class="loading" id="loading">AI가 열심히 규정을 찾는 중... 💬</div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="질문을 입력하세요..." onkeypress="if(event.keyCode==13) sendMessage()">
+        <button onclick="sendMessage()">전송</button>
+    </div>
+</div>
+
+<script>
+    async function sendMessage() {
+        const inputField = document.getElementById("userInput");
+        const chatBox = document.getElementById("chatBox");
+        const loading = document.getElementById("loading");
+        const message = inputField.value.trim();
+
+        if (!message) return; // 빈칸이면 전송 안 함
+
+        // 1. 내 메시지 화면에 추가
+        addMessage(message, "user-message");
+        inputField.value = ""; // 입력창 비우기
+
+        // 2. 로딩 표시 켜기
+        loading.style.display = "block";
+        chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 내리기
+
+        try {
+            // 3. 서버에 요청 보내기 (AJAX)
+            const response = await fetch(`/ai/chat?message=${encodeURIComponent(message)}`);
+
+            if (!response.ok) throw new Error("서버 오류 발생");
+
+            const data = await response.text(); // String으로 받음
+
+            // 4. AI 응답 화면에 추가
+            loading.style.display = "none";
+            addMessage(data, "ai-message");
+
+        } catch (error) {
+            console.error(error);
+            loading.style.display = "none";
+            addMessage("죄송합니다. 오류가 발생했습니다.", "ai-message");
+        }
+    }
+
+    function addMessage(text, className) {
+        const chatBox = document.getElementById("chatBox");
+        const div = document.createElement("div");
+        div.className = `message ${className}`;
+        div.innerText = text;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight; // 스크롤 맨 아래로
+    }
+</script>
+
+</body>
+</html>
