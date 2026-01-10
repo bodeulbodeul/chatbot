@@ -42,6 +42,12 @@ dependencies {
 
     // PDF 파일 읽기
     implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
+
+    // PostgreSQL DB Driver
+    implementation 'org.postgresql:postgresql'
+
+    // Spring AI 전용 PGVector library
+    implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
 }
 
 dependencyManagement {

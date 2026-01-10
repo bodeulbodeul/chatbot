@@ -31,8 +31,8 @@ public class DataLoader {
 
     @PostConstruct
     public void init() {
-        loadText();
-        loadPdf();
+//        loadText();
+//        loadPdf();
     }
 
     public void loadText() {
