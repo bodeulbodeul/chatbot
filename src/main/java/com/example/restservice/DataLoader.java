@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class DataLoader {
@@ -46,16 +47,13 @@ public class DataLoader {
         TextReader textReader = new TextReader(textResource);
 
         // 메타데이터 추가
-        textReader.getCustomMetadata().put("filename", textResource.getFilename());
+        String orgFileName = stripExtension(Objects.requireNonNull(textResource.getFilename()));
+        textReader.getCustomMetadata().put("filename", orgFileName);
 
         List<Document> documents = textReader.get();
 
-        // 크기 자르기
-        TokenTextSplitter splitter = new TokenTextSplitter();
-        List<Document> splitDocuments = splitter.apply(documents);
-
         // 저장소에 데이터 적재 (비용발생)
-        vectorStore.add(splitDocuments);
+        vectorStore.add(getSplitDocuments(documents));
         System.out.println(textResource.getFilename() + "파일 내용을 성공적으로 학습했습니다!");
     }
 
@@ -74,7 +72,8 @@ public class DataLoader {
 
         // 메타데이터 추가
         for (Document doc : pdfReader.get()) {
-            doc.getMetadata().put("filename", pdfResource.getFilename());
+            String orgFileName = stripExtension((Objects.requireNonNull(pdfResource.getFilename())));
+            doc.getMetadata().put("filename", orgFileName);
 
             String content = doc.getContent();
             String cleanContent = content.replaceAll("\\s+", " ").trim();
@@ -84,10 +83,21 @@ public class DataLoader {
             cleanDocuments.add(newDoc);
         }
 
-        TokenTextSplitter splitter = new TokenTextSplitter();
-        List<Document> splitDocuments = splitter.apply(cleanDocuments);
-
-        vectorStore.add(splitDocuments);
+        vectorStore.add(getSplitDocuments(cleanDocuments));
         System.out.println(pdfResource.getFilename() + "파일 내용을 성공적으로 학습했습니다!");
+    }
+
+    private List<Document> getSplitDocuments(List<Document> docs) {
+        TokenTextSplitter splitter = new TokenTextSplitter(150, 50, 5, 10000, true);
+        return splitter.apply(docs);
+    }
+
+    // 확장자 제거 헬퍼 메서드
+    private String stripExtension(String filename) {
+        int lastDotIndex = filename.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+            return filename.substring(0, lastDotIndex);
+        }
+        return filename;
     }
 }
