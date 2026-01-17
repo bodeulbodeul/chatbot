@@ -1,4 +1,4 @@
-package com.example.restservice;
+package com.example.restservice.config;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.ai.document.Document;
@@ -9,6 +9,7 @@ import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.Objects;
 public class DataLoader {
 
     private final VectorStore vectorStore;
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("classpath:regulations.txt")
     private Resource textResource;
@@ -26,14 +28,33 @@ public class DataLoader {
     @Value("classpath:rule.pdf")
     private Resource pdfResource;
 
-    public DataLoader(VectorStore vectorStore) {
+    @Value("${app.dataloader.mode:none}")
+    private String mode;
+
+    public DataLoader(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {
         this.vectorStore = vectorStore;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @PostConstruct
     public void init() {
-        loadText();
-        loadPdf();
+        if ("reset".equalsIgnoreCase(mode)) {
+            reset();
+            loadText();
+            loadPdf();
+        } else {
+            System.out.println("Data Loading skipped (mode=" + mode + ")");
+        }
+    }
+
+    public void reset() {
+        System.out.println("기존 벡터 데이터를 삭제합니다...");
+        try {
+            jdbcTemplate.execute("TRUNCATE TABLE vector_store");
+            System.out.println("벡터 데이터 삭제 완료.");
+        } catch (Exception e) {
+            System.err.println("벡터 데이터 삭제 중 오류 발생: " + e.getMessage());
+        }
     }
 
     public void loadText() {
