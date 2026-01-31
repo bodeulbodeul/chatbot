@@ -19,19 +19,18 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven { url 'https://repo.spring.io/milestone' } // Spring AI는 아직 마일스톤 저장소에 있습니다
 }
 
 ext {
-    set('springAiVersion', "1.0.0-M1") // Spring AI 버전 설정
+    set('springAiVersion', "1.0.3") // Spring AI 버전 설정
 }
 
 dependencies {
     // 1. 웹 서버 기능
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // 2. Spring AI 핵심 (OpenAI 연동) ★
-    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+    // 2. Spring AI 핵심 (OpenAI 연동)
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
 
     // 3. 롬복 (코딩 노가다 줄이기)
     compileOnly 'org.projectlombok:lombok'
@@ -47,7 +46,11 @@ dependencies {
     implementation 'org.postgresql:postgresql'
 
     // Spring AI 전용 PGVector library
-    implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+    implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+
+    // ChatMemory JDBC
+    implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
 }
 
 dependencyManagement {
