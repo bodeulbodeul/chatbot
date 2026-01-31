@@ -19,8 +19,6 @@ public class AppConfig {
     // 기억력 Advisor 추가
     @Bean
     public ChatClient chatClient(ChatClient.Builder builder, ChatMemory chatMemory) {
-        return builder.defaultAdvisors(
-                new MessageChatMemoryAdvisor(chatMemory)
-        ).build();
+        return builder.defaultAdvisors(new MessageChatMemoryAdvisor(chatMemory)).build();
     }
 }

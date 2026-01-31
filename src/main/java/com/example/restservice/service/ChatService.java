@@ -30,9 +30,12 @@ public class ChatService {
     @Value("classpath:prompts/rag-prompt.st")
     private Resource ragPrompt;
 
+    @Value("classpath:prompts/query-transformer.st")
+    private Resource queryTraResource;
+
     public String chat(String message) {
         // 검색 조건 설정
-        String queryMessage= transformQuery("user1", message);
+        String queryMessage = transformQuery("user1", message);
         SearchRequest searchRequest = SearchRequest
 //                .query(transformQuery("user1", message))
                 .query(queryMessage)
@@ -79,25 +82,11 @@ public class ChatService {
                 .map(m -> m.getMessageType() + ": " + m.getContent())
                 .collect(Collectors.joining("\n"));
 
-        String prompt = String.format("""
-                당신은 '검색어 최적화 도구'입니다. 질문에 답변하지 마십시오.
-                아래 [대화 내역]을 참고하여, [사용자 질문]의 의도를 명확하게 파악한 '검색용 질문'을 만드세요.
-                
-                [대화 내역]
-                %s
-                
-                [사용자 질문]
-                %s
-                
-                [지시사항]
-                1. 대명사(이것, 저것)나 생략된 주어(휴가, 급여 등)를 찾아서 복원하세요.
-                2. 답변이나 설명을 포함하지 말고, 오직 '하나의 질문 문장'만 출력하세요.
-                3. 반드시 물음표(?)로 끝나야 합니다.
-                
-                Example:
-                사용자: 안 쓰면 줘?
-                출력: 미사용 연차는 수당으로 지급되나요?
-                """, historyText, message);
+        PromptTemplate promptTemplate = new PromptTemplate(queryTraResource);
+        String prompt = promptTemplate.render(Map.of(
+                "history", historyText,
+                "message", message
+        ));
 
         return chatClient.prompt().user(prompt).call().content();
     }
