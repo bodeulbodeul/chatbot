@@ -50,7 +50,7 @@ public class DataLoader {
     public void reset() {
         System.out.println("기존 벡터 데이터를 삭제합니다...");
         try {
-            jdbcTemplate.execute("TRUNCATE TABLE vector_store");
+            jdbcTemplate.execute("DELETE FROM vector_store");
             System.out.println("벡터 데이터 삭제 완료.");
         } catch (Exception e) {
             System.err.println("벡터 데이터 삭제 중 오류 발생: " + e.getMessage());
