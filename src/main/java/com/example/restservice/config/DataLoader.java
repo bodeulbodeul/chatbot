@@ -85,9 +85,7 @@ public class DataLoader {
         }
 
         // PDF 파일 읽기
-        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(
-                pdfResource, PdfDocumentReaderConfig.builder().withPagesPerDocument(1).build()
-        );
+        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource, PdfDocumentReaderConfig.builder().withPagesPerDocument(1).build());
 
         List<Document> cleanDocuments = new ArrayList<>();
 
@@ -96,7 +94,7 @@ public class DataLoader {
             String orgFileName = stripExtension((Objects.requireNonNull(pdfResource.getFilename())));
             doc.getMetadata().put("filename", orgFileName);
 
-            String content = doc.getContent();
+            String content = doc.getText();
             String cleanContent = content.replaceAll("\\s+", " ").trim();
 
             Document newDoc = new Document(cleanContent, doc.getMetadata());

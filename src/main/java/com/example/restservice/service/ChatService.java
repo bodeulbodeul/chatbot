@@ -2,6 +2,7 @@ package com.example.restservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.prompt.PromptTemplate;
@@ -15,9 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -36,11 +34,11 @@ public class ChatService {
     public String chat(String message) {
         // 검색 조건 설정
         String queryMessage = transformQuery("user1", message);
-        SearchRequest searchRequest = SearchRequest
-//                .query(transformQuery("user1", message))
+        SearchRequest searchRequest = SearchRequest.builder()
                 .query(queryMessage)
-                .withTopK(3) // 개수
-                .withSimilarityThreshold(0.0); // 유사도
+                .topK(3) // 개수
+                .similarityThreshold(0.0)
+                .build(); // 유사도
 
         // 사용자 질문 벡터 검색
         List<Document> foundDocs = vectorStore.similaritySearch(searchRequest);
@@ -51,7 +49,7 @@ public class ChatService {
                     return String.format("""
                             [문서: %s]
                             %s
-                            """, fileName, doc.getContent());
+                            """, fileName, doc.getText());
                 }).collect(Collectors.joining("\n\n---\n\n"));
 
         // 프롬프트 렌더링
@@ -61,17 +59,19 @@ public class ChatService {
                 "message", queryMessage
         ));
 
-        return chatClient.prompt()
+
+        ChatClientResponse res = chatClient.prompt()
                 .user(promptText)
-                .advisors(a -> a.param(CHAT_MEMORY_CONVERSATION_ID_KEY, "user1") // 사용자별ID
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10)) // 최근 10마디 기억
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, "user1"))
                 .call()
-                .content();
+                .chatClientResponse();
+
+        return res.chatResponse().getResult().getOutput().getText();
     }
 
     private String transformQuery(String conversationId, String message) {
         // 이전 대화 가져오기
-        List<Message> history = chatMemory.get(conversationId, 3);
+        List<Message> history = chatMemory.get(conversationId);
 
         if (history.isEmpty()) {
             return message;
@@ -79,7 +79,7 @@ public class ChatService {
 
         // 질문 재구성
         String historyText = history.stream()
-                .map(m -> m.getMessageType() + ": " + m.getContent())
+                .map(m -> m.getMessageType() + ": " + m.getText())
                 .collect(Collectors.joining("\n"));
 
         PromptTemplate promptTemplate = new PromptTemplate(queryTraResource);

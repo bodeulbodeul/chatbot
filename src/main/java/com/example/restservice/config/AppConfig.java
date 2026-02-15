@@ -23,9 +23,7 @@ public class AppConfig {
     }
 
     @Bean
-    public ChatClient chatClient(ChatClient.Builder builder,
-                                 VectorStore vectorStore,
-                                 ChatMemory chatMemory) {
+    public ChatClient chatClient(ChatClient.Builder builder, VectorStore vectorStore, ChatMemory chatMemory) {
 
         return builder
                 .defaultAdvisors(
