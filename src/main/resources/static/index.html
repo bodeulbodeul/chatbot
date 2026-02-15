@@ -18,15 +18,19 @@
         input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
         button { margin-left: 10px; padding: 10px 20px; background-color: #ffeb33; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #f0d700; }
+        .system-info { font-size: 0.8em; color: #666; text-align: center; padding: 10px }
 
         /* 로딩 애니메이션 */
-        .loading { font-size: 12px; color: #666; align-self: flex-start; margin-left: 10px; display: none; }
+        .loading { font-size: 12px; color: #666; align-self: flex-start; margin: 10px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
     <div class="header">🏢 사내 규정 봇</div>
+    <div class="system-info">
+        Session ID: <span id="session-display">...</span>
+    </div>
     <div class="chat-box" id="chatBox">
         <div class="message ai-message">안녕하세요! 궁금한 규정을 물어보세요.</div>
     </div>
@@ -38,6 +42,21 @@
 </div>
 
 <script>
+
+    // 세션 ID 관리
+    function getOrCreateChatId() {
+        let chatId = localStorage.getItem("rag_chat_id");
+        if (!chatId) {
+            // 브라우저가 지원하는 강력한 난수 생성기 사용
+            chatId = crypto.randomUUID();
+            localStorage.setItem("rag_chat_id", chatId);
+        }
+        return chatId;
+    }
+
+    const currentChatId = getOrCreateChatId();
+    document.getElementById("session-display").innerText = currentChatId;
+
     async function sendMessage() {
         const inputField = document.getElementById("userInput");
         const chatBox = document.getElementById("chatBox");
@@ -56,7 +75,7 @@
 
         try {
             // 3. 서버에 요청 보내기 (AJAX)
-            const response = await fetch(`/ai/chat?message=${encodeURIComponent(message)}`);
+            const response = await fetch(`/ai/chat?chatId=${currentChatId}&message=${encodeURIComponent(message)}`);
 
             if (!response.ok) throw new Error("서버 오류 발생");
 

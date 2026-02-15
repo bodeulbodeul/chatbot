@@ -31,9 +31,9 @@ public class ChatService {
     @Value("classpath:prompts/query-transformer.st")
     private Resource queryTraResource;
 
-    public String chat(String message) {
+    public String chat(String message, String chatId) {
         // 검색 조건 설정
-        String queryMessage = transformQuery("user1", message);
+        String queryMessage = transformQuery(chatId, message);
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(queryMessage)
                 .topK(3) // 개수
@@ -62,16 +62,16 @@ public class ChatService {
 
         ChatClientResponse res = chatClient.prompt()
                 .user(promptText)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, "user1"))
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
                 .call()
                 .chatClientResponse();
 
         return res.chatResponse().getResult().getOutput().getText();
     }
 
-    private String transformQuery(String conversationId, String message) {
+    private String transformQuery(String chatId, String message) {
         // 이전 대화 가져오기
-        List<Message> history = chatMemory.get(conversationId);
+        List<Message> history = chatMemory.get(chatId);
 
         if (history.isEmpty()) {
             return message;

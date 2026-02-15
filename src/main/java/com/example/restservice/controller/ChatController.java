@@ -1,4 +1,3 @@
-
 package com.example.restservice.controller;
 
 import com.example.restservice.service.ChatService;
@@ -14,7 +13,7 @@ public class ChatController {
     private final ChatService service;
 
     @GetMapping("/ai/chat")
-    public String chat(@RequestParam("message") String message) {
-        return service.chat(message);
+    public String chat(@RequestParam("message") String message, @RequestParam("chatId") String chatId) {
+        return service.chat(message, chatId);
     }
 }
